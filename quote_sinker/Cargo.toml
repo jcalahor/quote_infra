@@ -1,0 +1,6 @@
+[package]
+name = "quote_sinker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
