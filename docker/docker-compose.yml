@@ -1,0 +1,51 @@
+version: '3'
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=my-password
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=16
+  zookeeper:
+      image: confluentinc/cp-zookeeper:latest
+      container_name: zookeeper
+      environment:
+        ZOOKEEPER_SERVER_ID: 1
+        ZOOKEEPER_CLIENT_PORT: 2181
+        ZOOKEEPER_TICK_TIME: 2000
+      ports:
+        - "2181:2181"
+      networks:
+        - quote_net
+  kafka:
+      image: confluentinc/cp-kafka:latest
+      container_name: broker
+      ports:
+        - "9092:9092"
+        - "19092:19092"
+      environment:
+        KAFKA_BROKER_ID: 1
+        KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:19092
+        KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:19092
+        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+        KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      depends_on:
+        - zookeeper
+      networks:
+        - quote_net
+      command: [ "sh", "-c", "sleep 10 && /etc/confluent/docker/run" ]
+
+networks:
+    quote_net:
+      driver: bridge
+      ipam:
+        driver: default
+        config:
+        - subnet: 172.60.0.0/16
+          gateway: 172.60.0.1
