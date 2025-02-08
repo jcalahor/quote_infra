@@ -1,7 +1,9 @@
+use std::panic::panic_any;
+
 use chrono::Local;
 use fast_log::Config as FastLocaConfig;
 use log::{error, info};
-use quote_lib::{QuoteEnvelope, RedisHandler};
+use quote_lib::{QuoteEnvelope, RedisHandler, CONFIG};
 use rand::Rng;
 
 use rdkafka::{
@@ -10,8 +12,8 @@ use rdkafka::{
 };
 use serde::{Deserialize, Serialize};
 use tokio::time::Duration;
-mod config;
-use config::CONFIG;
+
+const EXPIRE_SECONDS: i64 = 3600 * 24 * 7;
 
 fn create_kafka_consumer() -> BaseConsumer {
     match ClientConfig::new()
@@ -69,14 +71,32 @@ async fn main() {
         .expect("topic subscribe failed");
 
     info!("Starting background process...");
+
+    let redis_handler = match RedisHandler::new(&CONFIG.redis.redis_url).await {
+        Ok(handler) => {
+            // Successfully created the RedisHandler instance
+            handler
+        }
+        Err(err) => {
+            error!("Error creating Redis handler: {}", err);
+            panic!("");
+        }
+    };
+
     loop {
         match consumer.poll(Duration::from_secs(1)) {
             Some(Ok(msg)) => {
                 if let Some(payload) = msg.payload_view::<str>() {
                     match payload {
-                        Ok(json) => match serde_json::from_str::<QuoteEnvelope>(json) {
+                        Ok(json) => match QuoteEnvelope::from_json(json) {
                             Ok(quote) => {
                                 info!("Received Quote: {:?}", quote);
+                                match redis_handler.store_quote(&quote, EXPIRE_SECONDS).await {
+                                    Ok(_) => {
+                                        info!("Stored Quote: {:?}", quote);
+                                    }
+                                    Err(err) => error!("{}", err),
+                                }
                             }
                             Err(err) => {
                                 error!("Failed to parse message: {}", err);

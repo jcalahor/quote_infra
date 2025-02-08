@@ -1,7 +1,7 @@
 use chrono::Local;
 use fast_log::Config as FastLocaConfig;
 use log::{error, info};
-use quote_lib::QuoteEnvelope;
+use quote_lib::{QuoteEnvelope, CONFIG};
 use rand::Rng;
 use rdkafka::config::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
@@ -15,9 +15,6 @@ use tokio::time::{sleep, Duration};
 const CURR_URL: &str = "http://flakysaas.com/currencies";
 const CURR_USD: &str = "usd";
 const QUOTE_URL: &str = "http://flakysaas.com/quote";
-
-mod config;
-use config::CONFIG;
 
 #[derive(Serialize)]
 struct QuoteRequest {

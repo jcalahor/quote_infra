@@ -1,3 +1,4 @@
+use crate::quote_envelope::QuoteEnvelope;
 use chrono::{DateTime, Utc};
 use deadpool_redis::redis::{self, AsyncCommands}; // Import redis from deadpool_redis
 use deadpool_redis::{Manager, Pool};
@@ -21,6 +22,7 @@ pub enum RedisQuoteError {
 pub struct RedisHandler {
     redis_pool: Pool,
 }
+const EXPIRE_SECONDS: i64 = 60;
 
 impl RedisHandler {
     pub async fn new(redis_url: &str) -> Result<Self, RedisQuoteError> {
@@ -36,17 +38,20 @@ impl RedisHandler {
 
     pub async fn store_quote(
         &self,
-        key: &str,
-        payload: String,
+        quote_envelope: &QuoteEnvelope,
         ttl_seconds: i64,
     ) -> Result<bool, RedisQuoteError> {
         let mut conn = self
             .redis_pool
             .get()
             .await
-            .map_err(|_| RedisQuoteError::PoolError)?; // Map PoolError to LockingError
+            .map_err(|_| RedisQuoteError::PoolError)?;
 
-        conn.set_ex::<_, _, ()>(key, payload, ttl_seconds as u64)
+        let key = format!(
+            "{}_{}_{}",
+            quote_envelope.date, quote_envelope.base, quote_envelope.quote
+        );
+        conn.set_ex::<_, _, ()>(key, quote_envelope.to_json(), ttl_seconds as u64)
             .await
             .map_err(RedisQuoteError::RedisError)?;
         Ok(true)
