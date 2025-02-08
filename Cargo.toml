@@ -1,5 +1,5 @@
 [workspace]
-members = ["quote_api", "quote_api_collector", "quote_sinker"]
+members = ["quote_api", "quote_api_collector", "quote_lib", "quote_sinker"]
 resolver = "2"
 
 [workspace.dependencies]
@@ -7,3 +7,5 @@ resolver = "2"
 axum = {version = "0.8.1", features = ["ws"]}
 # Tokio for asynchronous runtime
 tokio = { version = "1.42", features = ["full"] }
+
+

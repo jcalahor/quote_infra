@@ -19,3 +19,4 @@ fast_log = {version = "1.5"}
 log = "0.4"
 rand = "0.8"
 chrono = { version = "0.4.39", features = ["serde"] }
+quote_lib = { path = "../quote_lib" }  # Adjust the path as needed

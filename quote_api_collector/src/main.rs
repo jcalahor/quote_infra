@@ -1,6 +1,7 @@
 use chrono::Local;
 use fast_log::Config as FastLocaConfig;
 use log::{error, info};
+use quote_lib::QuoteEnvelope;
 use rand::Rng;
 use rdkafka::config::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
@@ -32,27 +33,18 @@ struct QuoteResponse {
     base: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct QuoteEnvelope {
-    date: String,
-    rate: f64,
-    quote: String,
-    base: String,
-    timestamp: u64,
-}
-
 impl From<QuoteResponse> for QuoteEnvelope {
     fn from(response: QuoteResponse) -> Self {
-        Self {
-            date: response.date,
-            rate: response.rate,
-            quote: response.quote,
-            base: response.base,
-            timestamp: SystemTime::now()
+        QuoteEnvelope::new(
+            response.date,
+            response.rate,
+            response.quote,
+            response.base,
+            SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_secs(),
-        }
+        )
     }
 }
 
@@ -170,7 +162,7 @@ async fn main() {
                     );
 
                     let envelope: QuoteEnvelope = response.into();
-                    let json_payload = serde_json::to_string(&envelope).unwrap();
+                    let json_payload = envelope.to_json();
                     match producer
                         .send(
                             FutureRecord::to(&CONFIG.kafka.topic)

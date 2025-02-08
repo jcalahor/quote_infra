@@ -1,6 +1,7 @@
 use chrono::Local;
 use fast_log::Config as FastLocaConfig;
 use log::{error, info};
+use quote_lib::{QuoteEnvelope, RedisHandler};
 use rand::Rng;
 
 use rdkafka::{
@@ -11,15 +12,6 @@ use serde::{Deserialize, Serialize};
 use tokio::time::Duration;
 mod config;
 use config::CONFIG;
-
-#[derive(Serialize, Deserialize, Debug)]
-struct QuoteEnvelope {
-    date: String,
-    rate: f64,
-    quote: String,
-    base: String,
-    timestamp: u64,
-}
 
 fn create_kafka_consumer() -> BaseConsumer {
     match ClientConfig::new()
