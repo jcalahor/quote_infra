@@ -6,3 +6,7 @@ pub use quote_envelope::QuoteEnvelope;
 
 mod config;
 pub use config::CONFIG;
+
+mod logger;
+pub use logger::setup_logger;
+pub use logger::FileNameIdentifiers;

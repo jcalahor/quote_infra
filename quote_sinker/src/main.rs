@@ -3,7 +3,7 @@ use std::panic::panic_any;
 use chrono::Local;
 use fast_log::Config as FastLocaConfig;
 use log::{error, info};
-use quote_lib::{QuoteEnvelope, RedisHandler, CONFIG};
+use quote_lib::{setup_logger, FileNameIdentifiers, QuoteEnvelope, RedisHandler, CONFIG};
 use rand::Rng;
 
 use rdkafka::{
@@ -32,27 +32,6 @@ fn create_kafka_consumer() -> BaseConsumer {
     }
 }
 
-pub struct FileNameIdentifiers {
-    pub time_stamp: String,
-    pub random_nbr: u32,
-}
-
-fn setup_logger(fni: &FileNameIdentifiers) -> Result<(), Box<dyn std::error::Error>> {
-    let file_path: String = format!(
-        "logs/{}@{}@quote-sinker-output.log",
-        fni.time_stamp.clone(),
-        fni.random_nbr
-    );
-    fast_log::init(
-        FastLocaConfig::new()
-            .file(file_path.as_str())
-            .chan_len(Some(10000))
-            .level(log::LevelFilter::Info),
-    )
-    .unwrap();
-    Ok(())
-}
-
 #[tokio::main]
 async fn main() {
     let mut rng = rand::thread_rng();
@@ -62,6 +41,7 @@ async fn main() {
     let fni = FileNameIdentifiers {
         time_stamp: timestamp,
         random_nbr: random_number,
+        name_suffix: "quote-sinker-output.log".to_string(),
     };
     setup_logger(&fni).expect("Failed to set up logger");
 

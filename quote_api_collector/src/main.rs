@@ -1,7 +1,7 @@
 use chrono::Local;
 use fast_log::Config as FastLocaConfig;
 use log::{error, info};
-use quote_lib::{QuoteEnvelope, CONFIG};
+use quote_lib::{setup_logger, FileNameIdentifiers, QuoteEnvelope, CONFIG};
 use rand::Rng;
 use rdkafka::config::ClientConfig;
 use rdkafka::producer::{FutureProducer, FutureRecord};
@@ -43,27 +43,6 @@ impl From<QuoteResponse> for QuoteEnvelope {
                 .as_secs(),
         )
     }
-}
-
-pub struct FileNameIdentifiers {
-    pub time_stamp: String,
-    pub random_nbr: u32,
-}
-
-fn setup_logger(fni: &FileNameIdentifiers) -> Result<(), Box<dyn std::error::Error>> {
-    let file_path: String = format!(
-        "logs/{}@{}@quote-api-collector-output.log",
-        fni.time_stamp.clone(),
-        fni.random_nbr
-    );
-    fast_log::init(
-        FastLocaConfig::new()
-            .file(file_path.as_str())
-            .chan_len(Some(10000))
-            .level(log::LevelFilter::Info),
-    )
-    .unwrap();
-    Ok(())
 }
 
 fn create_kafka_producer() -> FutureProducer {
@@ -122,6 +101,7 @@ async fn main() {
     let fni = FileNameIdentifiers {
         time_stamp: timestamp,
         random_nbr: random_number,
+        name_suffix: "quote-api-collector-output.log".to_string(),
     };
     setup_logger(&fni).expect("Failed to set up logger");
 
