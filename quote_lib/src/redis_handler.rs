@@ -14,6 +14,9 @@ pub enum RedisQuoteError {
     #[error("Serialization error: {0}")]
     SerializationError(#[from] SerdeError),
 
+    #[error("DeSerializationError error")]
+    DeserializationError,
+
     #[error("Pool error")]
     PoolError,
 }
@@ -22,7 +25,6 @@ pub enum RedisQuoteError {
 pub struct RedisHandler {
     redis_pool: Pool,
 }
-const EXPIRE_SECONDS: i64 = 60;
 
 impl RedisHandler {
     pub async fn new(redis_url: &str) -> Result<Self, RedisQuoteError> {
@@ -55,5 +57,28 @@ impl RedisHandler {
             .await
             .map_err(RedisQuoteError::RedisError)?;
         Ok(true)
+    }
+
+    pub async fn get_quote(
+        &self,
+        date: &String,
+        base: &String,
+        quote: &String,
+    ) -> Result<Option<QuoteEnvelope>, RedisQuoteError> {
+        let mut conn = self
+            .redis_pool
+            .get()
+            .await
+            .map_err(|_| RedisQuoteError::PoolError)?;
+
+        let key = format!("{}_{}_{}", date, base, quote);
+
+        match conn.get::<_, Option<String>>(key).await {
+            Ok(Some(json_str)) => QuoteEnvelope::from_json(&json_str)
+                .map(Some)
+                .map_err(|_| RedisQuoteError::DeserializationError),
+            Ok(None) => Ok(None),
+            Err(e) => Err(RedisQuoteError::RedisError(e)),
+        }
     }
 }

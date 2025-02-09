@@ -1,44 +1,95 @@
 use axum::response::IntoResponse;
 use axum::{
-    extract::{Extension, Json},
+    extract::{Json, State},
     http::StatusCode,
     routing::get,
     Router,
 };
-use chrono::Local;
 
-use log::info;
+use chrono::{Local, Utc};
+use std::sync::Arc;
+
+use log::{error, info};
 use quote_lib::{setup_logger, FileNameIdentifiers, QuoteEnvelope, RedisHandler, CONFIG};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct QuoteRequest {
+pub struct QuoteRequest {
     quote: String,
     base: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct QuoteResponse {
+pub struct QuoteResponse {
     quote: String,
     base: String,
     date: String,
+    rate: f64,
 }
 
-async fn quote_inquire(Json(payload): Json<QuoteRequest>) -> Result<impl IntoResponse, StatusCode> {
-    let response = QuoteResponse {
-        quote: "".to_string(),
-        base: "".to_string(),
-        date: "".to_string(),
+pub async fn quote_inquire(
+    State(redis_handler): State<Arc<RedisHandler>>,
+    Json(payload): Json<QuoteRequest>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let date = Utc::now().format("%d-%m-%Y").to_string();
+    let quote_envelope_base = match redis_handler
+        .get_quote(&date, &payload.base, &"USD".to_string())
+        .await
+    {
+        Ok(Some(quote_envelope)) => Some(quote_envelope),
+        Ok(None) => None,
+        Err(_) => {
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        }
     };
+
+    let quote_envelope_quote = match redis_handler
+        .get_quote(&date, &payload.quote, &"USD".to_string())
+        .await
+    {
+        Ok(Some(quote_envelope)) => Some(quote_envelope),
+        Ok(None) => None,
+        Err(_) => {
+            return Err(StatusCode::INTERNAL_SERVER_ERROR);
+        }
+    };
+
+    if quote_envelope_base.is_none() || quote_envelope_quote.is_none() {
+        error!("One or both quotes not found.");
+        return Err(StatusCode::NOT_FOUND);
+    }
+
+    let base_quote = quote_envelope_base.unwrap();
+    let quote_quote = quote_envelope_quote.unwrap();
+
+    // Create the response based on the quotes fetched
+    let response = QuoteResponse {
+        quote: quote_quote.quote,
+        base: base_quote.base,
+        date: date,
+        rate: quote_quote.rate / base_quote.rate,
+    };
+
     info!("response with: {:?}", &response);
     Ok(Json(response))
 }
 
 pub async fn app() -> Router {
+    let redis_handler = match RedisHandler::new(&CONFIG.redis.redis_url).await {
+        Ok(handler) => {
+            // Successfully created the RedisHandler instance
+            Arc::new(handler)
+        }
+        Err(err) => {
+            error!("Error creating Redis handler: {}", err);
+            panic!("");
+        }
+    };
     Router::new()
         .route("/quote", get(quote_inquire))
         .route("/", get(|| async { "Hello, World!" }))
+        .with_state(redis_handler)
 }
 
 #[tokio::main]
