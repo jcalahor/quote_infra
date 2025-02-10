@@ -6,7 +6,7 @@ use axum::{
     Router,
 };
 
-use chrono::{Local, Utc};
+use chrono::{FixedOffset, Local, TimeZone, Utc};
 use std::sync::Arc;
 
 use log::{error, info};
@@ -32,7 +32,12 @@ pub async fn quote_inquire(
     State(redis_handler): State<Arc<RedisHandler>>,
     Json(payload): Json<QuoteRequest>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let date = Utc::now().format("%d-%m-%Y").to_string();
+    info!("Request: {:?}", payload);
+    let utc_now = Utc::now();
+    let est_offset = FixedOffset::west(5 * 3600); // UTC - 5 hours
+    let est_now = utc_now.with_timezone(&est_offset);
+    let date = est_now.format("%Y-%m-%d").to_string();
+
     let quote_envelope_base = match redis_handler
         .get_quote(&date, &payload.base, &"USD".to_string())
         .await
@@ -63,9 +68,11 @@ pub async fn quote_inquire(
     let base_quote = quote_envelope_base.unwrap();
     let quote_quote = quote_envelope_quote.unwrap();
 
+    info!("Found quotes: {:?} - {:?}", base_quote, quote_quote);
+
     // Create the response based on the quotes fetched
     let response = QuoteResponse {
-        quote: quote_quote.quote,
+        quote: quote_quote.base,
         base: base_quote.base,
         date: date,
         rate: quote_quote.rate / base_quote.rate,
