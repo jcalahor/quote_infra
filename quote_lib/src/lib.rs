@@ -10,3 +10,6 @@ pub use config::CONFIG;
 mod logger;
 pub use logger::setup_logger;
 pub use logger::FileNameIdentifiers;
+
+mod elastic;
+pub use elastic::store_quote_envelope;

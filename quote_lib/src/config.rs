@@ -17,6 +17,11 @@ pub struct KafkaConfig {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct ElasticsearchConfig {
+    pub host: String,
+}
+
+#[derive(Deserialize, Debug)]
 pub struct RedisConfig {
     pub redis_url: String,
 }
@@ -26,6 +31,7 @@ pub struct Config {
     pub server: ServerConfig,
     pub kafka: KafkaConfig,
     pub redis: RedisConfig,
+    pub elasticsearch: ElasticsearchConfig,
 }
 
 impl Config {
@@ -52,6 +58,10 @@ impl Config {
             },
             redis: RedisConfig {
                 redis_url: env::var("REDIS_URL").expect("REDIS_URL must be set"),
+            },
+            elasticsearch: ElasticsearchConfig {
+                host: env::var("ELASTICSEARCH_HOST")
+                    .unwrap_or_else(|_| "http://localhost:9200".to_string()),
             },
         }
     }

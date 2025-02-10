@@ -1,10 +1,14 @@
+use elasticsearch::{http::transport::Transport, Elasticsearch, Error};
 use std::panic::panic_any;
 
 use chrono::Local;
 use fast_log::Config as FastLocaConfig;
 use log::{error, info};
-use quote_lib::{setup_logger, FileNameIdentifiers, QuoteEnvelope, RedisHandler, CONFIG};
+use quote_lib::{
+    setup_logger, store_quote_envelope, FileNameIdentifiers, QuoteEnvelope, RedisHandler, CONFIG,
+};
 use rand::Rng;
+use std::error::Error as StdError;
 
 use rdkafka::{
     consumer::{BaseConsumer, Consumer},
@@ -32,6 +36,12 @@ fn create_kafka_consumer() -> BaseConsumer {
     }
 }
 
+fn connect_to_elasticsearch() -> Result<Elasticsearch, Box<dyn StdError>> {
+    let transport = Transport::single_node(&CONFIG.elasticsearch.host)?;
+    let client = Elasticsearch::new(transport);
+    Ok(client)
+}
+
 #[tokio::main]
 async fn main() {
     let mut rng = rand::thread_rng();
@@ -45,6 +55,7 @@ async fn main() {
     };
     setup_logger(&fni).expect("Failed to set up logger");
 
+    let client = connect_to_elasticsearch().unwrap();
     let consumer = create_kafka_consumer();
     consumer
         .subscribe(&[&CONFIG.kafka.topic])
@@ -76,6 +87,14 @@ async fn main() {
                                         info!("Stored Quote: {:?}", quote);
                                     }
                                     Err(err) => error!("{}", err),
+                                }
+                                match store_quote_envelope(&client, &quote).await {
+                                    Ok(_) => {
+                                        info!("Quote successfully stored in ES{:?}", quote);
+                                    }
+                                    Err(e) => {
+                                        error!("Failed to store quote envelope: {}", e);
+                                    }
                                 }
                             }
                             Err(err) => {
