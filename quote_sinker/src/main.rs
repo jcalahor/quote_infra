@@ -1,8 +1,6 @@
-use elasticsearch::{http::transport::Transport, Elasticsearch, Error};
-use std::panic::panic_any;
+use elasticsearch::{http::transport::Transport, Elasticsearch};
 
 use chrono::Local;
-use fast_log::Config as FastLocaConfig;
 use log::{error, info};
 use quote_lib::{
     setup_logger, store_quote_envelope, FileNameIdentifiers, QuoteEnvelope, RedisHandler, CONFIG,
@@ -14,7 +12,6 @@ use rdkafka::{
     consumer::{BaseConsumer, Consumer},
     ClientConfig, Message as RdMesssage,
 };
-use serde::{Deserialize, Serialize};
 use tokio::time::Duration;
 
 const EXPIRE_SECONDS: i64 = 3600 * 24 * 7;
@@ -84,13 +81,16 @@ async fn main() {
                                 info!("Received Quote: {:?}", quote);
                                 match redis_handler.store_quote(&quote, EXPIRE_SECONDS).await {
                                     Ok(_) => {
-                                        info!("Stored Quote: {:?}", quote);
+                                        info!("Stored Quote in Redis {:?}", quote);
                                     }
                                     Err(err) => error!("{}", err),
                                 }
                                 match store_quote_envelope(&client, &quote).await {
                                     Ok(_) => {
-                                        info!("Quote successfully stored in ES{:?}", quote);
+                                        info!(
+                                            "Quote successfully stored in Elastic Search {:?}",
+                                            quote
+                                        );
                                     }
                                     Err(e) => {
                                         error!("Failed to store quote envelope: {}", e);

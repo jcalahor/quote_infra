@@ -1,5 +1,4 @@
 use chrono::Local;
-use fast_log::Config as FastLocaConfig;
 use log::{error, info};
 use quote_lib::{setup_logger, FileNameIdentifiers, QuoteEnvelope, CONFIG};
 use rand::Rng;
@@ -130,8 +129,9 @@ async fn main() {
     };
 
     loop {
+        let mut call_counter = 1;
         for curr in &currencies {
-            match fetch_quote_data("usd", &curr).await {
+            match fetch_quote_data(CURR_USD, curr).await {
                 Ok(response) => {
                     info!(
                         "Date: {}, Exchange Rate from {} to {}: {}",
@@ -155,7 +155,7 @@ async fn main() {
                                 &json_payload, &CONFIG.kafka.topic
                             );
                         }
-                        Err(e) => {
+                        Err(_) => {
                             error!("Failed to send message: {} ", json_payload);
                         }
                     }
@@ -164,8 +164,13 @@ async fn main() {
                     error!("Error fetching quote for {}: {}", curr, err);
                 }
             }
+            if (call_counter % 5) == 0 {
+                info!("Sleeping 5 seconds");
+                sleep(Duration::new(5, 0)).await;
+            }
+            call_counter += 1;
         }
-
-        sleep(Duration::from_secs(10)).await;
+        info!("Sleeping 5 seconds");
+        sleep(Duration::from_secs(5)).await;
     }
 }

@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use axum::response::IntoResponse;
 use axum::{
     extract::{Json, State},
@@ -6,11 +8,11 @@ use axum::{
     Router,
 };
 
-use chrono::{FixedOffset, Local, TimeZone, Utc};
+use chrono::{FixedOffset, Local, Utc};
 use std::sync::Arc;
 
 use log::{error, info};
-use quote_lib::{setup_logger, FileNameIdentifiers, QuoteEnvelope, RedisHandler, CONFIG};
+use quote_lib::{setup_logger, FileNameIdentifiers, RedisHandler, CONFIG};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
@@ -28,12 +30,15 @@ pub struct QuoteResponse {
     rate: f64,
 }
 
+
 pub async fn quote_inquire(
     State(redis_handler): State<Arc<RedisHandler>>,
     Json(payload): Json<QuoteRequest>,
 ) -> Result<impl IntoResponse, StatusCode> {
     info!("Request: {:?}", payload);
     let utc_now = Utc::now();
+
+    
     let est_offset = FixedOffset::west(5 * 3600); // UTC - 5 hours
     let est_now = utc_now.with_timezone(&est_offset);
     let date = est_now.format("%Y-%m-%d").to_string();
@@ -74,7 +79,7 @@ pub async fn quote_inquire(
     let response = QuoteResponse {
         quote: quote_quote.base,
         base: base_quote.base,
-        date: date,
+        date,
         rate: quote_quote.rate / base_quote.rate,
     };
 

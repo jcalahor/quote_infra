@@ -1,11 +1,10 @@
 use crate::quote_envelope::QuoteEnvelope;
-use chrono::{DateTime, Utc};
 use deadpool_redis::redis::{self, AsyncCommands}; // Import redis from deadpool_redis
 use deadpool_redis::{Manager, Pool};
-use serde::{Deserialize, Serialize};
 use serde_json::Error as SerdeError;
 use thiserror::Error;
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Error)]
 pub enum RedisQuoteError {
     #[error("Redis error: {0}")]
