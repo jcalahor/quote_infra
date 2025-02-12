@@ -198,4 +198,11 @@ Sample quote_api log:
 2025-02-11 20:10:06.873155539 [INFO] Found quotes: QuoteEnvelope { date: "2025-02-11", rate: 0.013484932, quote: "USD", base: "AFN", timestamp: 1739318692 } - QuoteEnvelope { date: "2025-02-11", rate: 0.52675209, quote: "USD", base: "BGN", timestamp: 1739318873 }
 2025-02-11 20:10:06.873172774 [INFO] response with: QuoteResponse { quote: "BGN", base: "AFN", date: "2025-02-11", rate: 39.062272616576784 }
 ```
+Sample usage of the API from Postman:
+![image](https://github.com/user-attachments/assets/f5e83a44-e5bc-4f52-987c-260696f3be2d)
+
+Elastic Search output: 
+![image](https://github.com/user-attachments/assets/5a0b2ad8-0440-41db-95ce-6a9b9e88b724)
+
+
 
