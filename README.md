@@ -72,7 +72,7 @@ Note: at the moment given the time constraint the url for the Elastic Sarch URL 
 
 
 
-##Usage
+## Usage
 
 
 Starting the quote_api_collector
@@ -92,7 +92,7 @@ cargo run -p quote_api
 ```
 
 
-##Monitoring
+## Monitoring
 
 At the moment the only monitoring schema available is via standard logs, which are generateds in /logs folder
 
