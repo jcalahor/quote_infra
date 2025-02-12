@@ -2,6 +2,12 @@
 
 quote_infra is an infraescture that serves as a proxy to the Quote Flaky API
 
+## Architecture
+https://lucid.app/lucidchart/48f95839-c7b4-4578-8642-6b97769f6c27/edit?viewport_loc=-1043%2C1619%2C2992%2C1612%2C0_0&invitationId=inv_a4d6fcb6-11e6-4be8-9991-0d292cab2a58
+
+
+
+
 ## Installation
 
 Clone the repository:
@@ -202,7 +208,22 @@ Sample usage of the API from Postman:
 ![image](https://github.com/user-attachments/assets/f5e83a44-e5bc-4f52-987c-260696f3be2d)
 
 Elastic Search output: 
+
+Kibana URL: http://<your host ip>>:5601/
 ![image](https://github.com/user-attachments/assets/5a0b2ad8-0440-41db-95ce-6a9b9e88b724)
+
+
+
+
+## Productionalize this:
+
+- Add tests (unit-integration)
+- Push logs to Cloudwatch
+- Generate a docker image for the solution, launch a EC2 and deploy the image
+- Add support for graphana/prometeus (metrics)
+- Build CI/CD, use Github Actions as needed. Follow standard PR (review/approve protocols)
+- Add cargo test, cargo clippy to the CI process
+
 
 
 
