@@ -21,3 +21,8 @@ Cargo.lock
 #.idea/
 logs/
 *.log
+
+
+__pycache__/
+*.pyc
+*.pyo
