@@ -216,7 +216,7 @@ Kibana URL: http://<your host ip>>:5601/
 
 ## Tests
 
-A simple integration fixture cruns in python, this test the action of pushing 2 quotes and getting the corresponding rate by calling the API
+A simple integration fixture that runs in python, this test the action of pushing 2 quotes and getting the corresponding rate by calling the API
 
 Pre-requisites:
 ```
