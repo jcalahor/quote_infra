@@ -39,9 +39,10 @@ pub async fn quote_inquire(
     let utc_now = Utc::now();
 
     
-    let est_offset = FixedOffset::west(5 * 3600); // UTC - 5 hours
+    let est_offset = FixedOffset::west(5 * 3600);
     let est_now = utc_now.with_timezone(&est_offset);
-    let date = est_now.format("%Y-%m-%d").to_string();
+    let date: String = est_now.format("%Y-%m-%d").to_string();
+    info!("Curr date {}", date);
 
     let quote_envelope_base = match redis_handler
         .get_quote(&date, &payload.base, &"USD".to_string())

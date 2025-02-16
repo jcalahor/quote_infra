@@ -214,6 +214,45 @@ Kibana URL: http://<your host ip>>:5601/
 
 
 
+## Tests
+
+A simple integration fixture that runs in python, this test, trigger the action of pushing 2 quotes and getting the corresponding rate by calling the API
+
+Pre-requisites:
+
+1) Launch environment via docker compose
+2) Install the following packages
+```
+pip install -r requirements.txt
+```
+
+Running integration test
+
+Before executing the tests, pytest will launch the quote_api and the quote_sinker. These two components will be tested.
+
+The test can be executed in the following manner:
+
+```
+jcalahor76@ubuntudev:~/development/rust/quote_infra$ pytest tests/ -v -s
+======================================================================================== test session starts ========================================================================================
+platform linux -- Python 3.12.9, pytest-8.3.4, pluggy-1.5.0 -- /usr/bin/python3.12
+cachedir: .pytest_cache
+rootdir: /home/jcalahor76/development/rust/quote_infra
+collected 1 item                                                                                                                                                                                    
+
+tests/integration/test_quote.py::test_quote     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.25s
+quote_api is running in the background (PID: 61674)
+quote_sinker is running in the background (PID: 61749)
+PASSEDquote_api (PID: 61674) has been stopped.
+quote_sinker (PID: 61749) has been stopped.
+
+
+======================================================================================== 1 passed in 22.71s =========================================================================================
+jcalahor76@ubuntudev:~/development/rust/quote_infra$ 
+
+```
+
+
 
 ## Productionalize this:
 
