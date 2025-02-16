@@ -216,14 +216,21 @@ Kibana URL: http://<your host ip>>:5601/
 
 ## Tests
 
-A simple integration fixture that runs in python, this test the action of pushing 2 quotes and getting the corresponding rate by calling the API
+A simple integration fixture that runs in python, this test, trigger the action of pushing 2 quotes and getting the corresponding rate by calling the API
 
 Pre-requisites:
+
+1) Launch environment via docker compose
+2) Install the following packages
 ```
 pip install -r requirements.txt
 ```
 
-Running integration tests
+Running integration test
+
+Before executing the tests, pytest will launch the quote_api and the quote_sinker. These two components will be tested.
+
+The test can be executed in the following manner:
 
 ```
 jcalahor76@ubuntudev:~/development/rust/quote_infra$ pytest tests/ -v -s
